@@ -1,0 +1,11 @@
+{
+  "name": "Quest Room",
+  "short_name": "Quest Room",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#17111c",
+  "theme_color": "#17111c",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }
+  ]
+}
