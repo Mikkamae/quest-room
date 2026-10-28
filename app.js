@@ -229,7 +229,8 @@ var I = {
     '<section class="panel"><div class="ph"><h2>How the week works</h2></div><div id="pl-notes" class="muted" style="font-size:14px;display:flex;flex-direction:column;gap:8px"></div></section>');
   var igbo = mk("v-igbo", "Igbo", '<div class="col" id="c-igbo"></div>');
   var jp = mk("v-japanese", "Japanese", '<div class="col" id="c-japanese"></div>');
-  sec.after(plan); plan.after(igbo); igbo.after(jp);
+  var learn = mk("v-learn", "Learning", '<div class="col" id="c-learn"></div>');
+  sec.after(plan); plan.after(igbo); igbo.after(jp); jp.after(learn);
   sec.before(plan);
   var sub = document.createElement("div"); sub.className = "subtabs"; sub.id = "subtabs"; sub.setAttribute("role", "tablist");
   nav.after(sub);
@@ -246,8 +247,8 @@ var I = {
     return '<button class="tab" data-group="' + g[0] + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ICON[g[0]] + '</svg>' + g[1] + '</button>';
   }).join("");
 })();
-var VIEWS = ["home", "quests", "missions", "pitches", "plan", "train", "igbo", "japanese", "character", "rewards"];
-var GROUPS = { home: [["home", "Home"]], quests: [["quests", "Quest board"], ["missions", "Missions"], ["pitches", "Pitches"]], grow: [["plan", "This week"], ["train", "Train"], ["igbo", "Igbo"], ["japanese", "Japanese"]], me: [["character", "Character"], ["rewards", "Rewards"]] };
+var VIEWS = ["home", "quests", "missions", "pitches", "plan", "learn", "train", "igbo", "japanese", "character", "rewards"];
+var GROUPS = { home: [["home", "Home"]], quests: [["quests", "Quest board"], ["missions", "Missions"], ["pitches", "Pitches"]], grow: [["plan", "This week"], ["learn", "Learning"], ["train", "Train"], ["igbo", "Igbo"], ["japanese", "Japanese"]], me: [["character", "Character"], ["rewards", "Rewards"]] };
 var lastInGroup = { home: "home", quests: "quests", grow: "plan", me: "character" };
 function groupOf(v) { for (var g in GROUPS) if (GROUPS[g].some(function (x) { return x[0] === v; })) return g; return "home"; }
 var openWeek = {};
@@ -735,6 +736,7 @@ function render() {
   else if (tab === "pitches") renderPitches();
   else if (tab === "train") renderTrain();
   else if (tab === "plan") renderPlan();
+  else if (tab === "learn") { if (window.Learn) window.Learn.render(); }
   else if (tab === "igbo" || tab === "japanese") renderCourse(tab);
   else if (tab === "character") renderCharacter();
   else if (tab === "rewards") renderRewards();
@@ -1280,7 +1282,11 @@ window.QR = {
     return xp;
   }
 };
-(function () { var fs = document.createElement("script"); fs.src = "/focus.js?v=1"; document.body.appendChild(fs); })();
+(function () { // focus.js first (the player), then learn.js (uses the player)
+  var fs = document.createElement("script"); fs.src = "/focus.js?v=2";
+  fs.onload = function () { var ls = document.createElement("script"); ls.src = "/learn.js?v=1"; document.body.appendChild(ls); };
+  document.body.appendChild(fs);
+})();
 loop(0); boot();
 var lastDay = G.dkey() + phaseOf(new Date()); setInterval(function () { var k = G.dkey() + phaseOf(new Date()); if (k !== lastDay) { lastDay = k; render(); } }, 60000);
 })();

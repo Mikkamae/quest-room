@@ -54,6 +54,7 @@ css.textContent =
   ".mine{display:flex;gap:6px;align-items:center}.mine .station{flex:1}" +
   ".mhead{display:flex;align-items:baseline;gap:8px;margin:16px 0 8px}.mhead .label{flex:1}" +
   ".ytpop{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom, 0px));z-index:25;width:min(360px,calc(100vw - 32px));background:var(--wall);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 40px #0007;overflow:hidden;animation:popin .25s ease}" +
+  ".ytpop.learn{width:min(520px,calc(100vw - 32px))}.ytpop.learn .ytbar{flex-wrap:wrap}.ytpop.learn .ytbar b{flex:1 1 100%;margin-bottom:2px}.ytpop.learn .ytbar [data-lndone]{margin-right:auto}" +
   "@keyframes popin{from{transform:translateY(16px);opacity:0}}" +
   ".ytbar{display:flex;align-items:center;gap:6px;padding:8px 8px 8px 12px}" +
   ".ytbar a.ghost{color:var(--muted)}.ytbar b{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
@@ -183,12 +184,16 @@ function embedSrc(v) {
   var base = "https://www.youtube-nocookie.com/embed/";
   return (v.list ? base + "videoseries?list=" + encodeURIComponent(v.list) + "&" : base + encodeURIComponent(v.id) + "?") + "autoplay=1&playsinline=1&rel=0";
 }
-function openPlayer(v, name) {
-  if (!pop) { pop = document.createElement("div"); pop.className = "ytpop"; pop.id = "ytpop"; pop.setAttribute("role", "region"); pop.setAttribute("aria-label", "Music player"); document.body.appendChild(pop); }
-  pop.classList.remove("min"); nowId = vkey(v);
-  pop.innerHTML = '<div class="ytbar"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><b>' + Q.esc(name) + '</b>' +
+// One player for the whole app: music from Focus, or a lesson from Learning (opt.learn adds a Done button).
+function openPlayer(v, name, opt) {
+  opt = opt || {};
+  if (!pop) { pop = document.createElement("div"); pop.className = "ytpop"; pop.id = "ytpop"; pop.setAttribute("role", "region"); document.body.appendChild(pop); }
+  pop.setAttribute("aria-label", opt.learn ? "Lesson player" : "Music player");
+  pop.classList.remove("min"); pop.classList.toggle("learn", !!opt.learn); nowId = vkey(v);
+  pop.innerHTML = '<div class="ytbar">' + (opt.learn ? '' : '<span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>') + '<b>' + Q.esc(name) + '</b>' +
+    (opt.learn ? '<button class="ghost" data-lndone="' + Q.esc(opt.learn) + '" style="color:var(--leaf);border-color:var(--leaf)" aria-label="I finished this video">Done</button>' : '') +
     '<a class="ghost" href="' + watchUrl(v) + '" target="_blank" rel="noopener" style="text-decoration:none" aria-label="Open on YouTube if the player does not work">YouTube</a>' +
-    '<button class="ghost" data-ytmin="1" aria-label="Make the player small">Hide</button><button class="ghost" data-ytclose="1" aria-label="Close the player and stop music">Close</button></div>' +
+    '<button class="ghost" data-ytmin="1" aria-label="Make the player small">Hide</button><button class="ghost" data-ytclose="1" aria-label="Close the player">Close</button></div>' +
     '<div class="ytbody"><iframe src="' + embedSrc(v) + '" title="' + Q.esc(name) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
   room(); drawMusic();
 }
@@ -196,6 +201,7 @@ function closePlayer() { if (pop) { pop.remove(); pop = null; } nowId = null; ro
 function room() { // leave space at the bottom of the page so the player never covers buttons
   document.body.classList.toggle("pop", !!pop);
   if (pop) document.body.style.setProperty("--popH", pop.offsetHeight + "px");
+  try { window.dispatchEvent(new Event("qr-player")); } catch (e) {}
 }
 addEventListener("resize", room);
 function drawMusic() {
@@ -234,6 +240,9 @@ document.addEventListener("submit", function (e) {
 });
 
 window.Focus = {
+  play: function (v, name, opt) { openPlayer(v, name, opt); },
+  close: closePlayer,
+  playing: function () { return nowId; },
   startFor: function (q) {
     st.quest = q.id; if (st.phase !== "focus") { st.phase = "focus"; st.left = total(); st.running = false; }
     startRun(); $("t-h").scrollIntoView({ behavior: "smooth", block: "center" });
