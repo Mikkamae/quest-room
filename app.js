@@ -39,6 +39,26 @@ function tracksFix() {
   });
   return true;
 }
+// One-time add (Oct 2026): quests for Wealth, Wisdom, Vitality, Harmony and Spirit. Craft already has plenty.
+// Mostly weekly, so the nightly quest hour stays at 90 minutes.
+function questsFix() {
+  if (S.settings.quests3) return false;
+  S.settings.quests3 = true;
+  [
+    ["Write your price list: 1 ad, a 3-ad set and a 5-ad set", "finances", "sk-money", "standard", "once", 30],
+    ["Money check: what came in, what went out this week", "finances", "sk-money", "easy", "weekly", 15],
+    ["Watch one creative strategy lesson in Learning and write your note", "learning", "sk-mind", "standard", "weekly", 30],
+    ["Rewrite one ad headline 5 different ways", "learning", "sk-words", "easy", "weekly", 20],
+    ["Phone down and lights off by 11:30 PM", "health", "", "tiny", "daily", 0],
+    ["Sunday plan: pick next week's 3 big things", "home", "", "easy", "weekly", 15],
+    ["Tidy your desk and files: clear downloads, name your designs", "home", "", "easy", "weekly", 15],
+    ["Make one thing just for fun, not for work", "creativity", "", "easy", "weekly", 30]
+  ].forEach(function (x) {
+    if (S.quests.some(function (q) { return q.title === x[0]; })) return;
+    S.quests.push({ id: "q-" + G.uid(), title: x[0], domain: x[1], skill: x[2], diff: x[3], repeat: x[4], min: x[5], status: "active", created: Date.now() });
+  });
+  return true;
+}
 var REPEAT = { once: "One time", daily: "Every day", weekly: "Every week" };
 var tab = "home", qStatus = "active", qDomain = "all", editing = null, confirmReward = null, busy = false;
 
@@ -1201,7 +1221,7 @@ function msg(t, k) { var m = $("g-msg"); m.textContent = t; m.className = "msg" 
 function showApp() {
   $("gate").hidden = true; $("app").hidden = false;
   $("qa-domain").innerHTML = domainOpts("career"); $("qa-diff").innerHTML = diffOpts("easy"); $("sk-domain").innerHTML = domainOpts("learning");
-  if (tracksFix()) save();
+  var fixed = tracksFix(); if (questsFix()) fixed = true; if (fixed) save();
   render(); build(); if (reduce) draw(0);
 }
 function showGate(note) {
